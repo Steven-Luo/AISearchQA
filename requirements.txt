@@ -1,0 +1,5 @@
+langchain>=0.1.20
+tqdm
+chainlit>=1.1.101
+duckduckgo_search>=6.1.0
+beautifulsoup4>=4.12.2

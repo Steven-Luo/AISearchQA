@@ -48,7 +48,7 @@ def search_with_tavily(query, max_retry=3):
             documents]
 
 
-def search_with_bing(query):
+def search_with_bing(query, k=5):
     import requests
     from bs4 import BeautifulSoup
     from urllib.parse import quote
@@ -73,7 +73,7 @@ def search_with_bing(query):
             'abstract': parent.select_one('div.b_caption > p').text.replace('\u2002', ' '),
             'href': parent.select_one('div.b_tpcn > a').get('href')
         })
-    return data
+    return data[:k]
 
 
 async def retrieve(query, k=5):
@@ -81,7 +81,7 @@ async def retrieve(query, k=5):
         step.input = query
         # search_results = search_with_ddg(query)
         # search_results = search_with_tavily(query)
-        search_results = search_with_bing(query)
+        search_results = search_with_bing(query, k)
         step.output = search_results
     search_results = {item['title']: item for item in search_results}
 
@@ -127,7 +127,7 @@ async def retrieve(query, k=5):
         ) for item in search_results.values()]
         split_docs = text_splitter.split_documents(documents)
         vectorstore = Chroma.from_documents(split_docs, embedding_model)
-        retriever = vectorstore.as_retriever(search_args={'k': 6})
+        retriever = vectorstore.as_retriever(search_args={'k': k})
         retrieved_docs = retriever.get_relevant_documents(query)
         context = '\n\n'.join([doc.page_content for doc in retrieved_docs])
         step.output = '\n\n'.join([f"参考片段{idx + 1}\n标题：{doc.metadata['title']}\n链接：{doc.metadata['href']}\n片段：{doc.page_content}" for idx, doc in
